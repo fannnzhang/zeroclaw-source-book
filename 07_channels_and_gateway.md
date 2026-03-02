@@ -48,7 +48,7 @@ pub trait Channel: Send + Sync {
 graph TD
     Client[Telegram / Webhook / Web App] -->|HTTP POST / WSS| Gateway((ZeroClaw Gateway))
     
-    subgraph Gateway Core (src/gateway/)
+    subgraph "Gateway Core (src/gateway/)"
         RateLimiter{"限流防火墙<br/>(SlidingWindowRateLimiter)"}
         IdempotencyStore{"幂等去重器<br/>(IdempotencyStore)"}
         PayloadValidation[恶意载荷拦截<br/>Content-Length 阻断]
@@ -59,7 +59,7 @@ graph TD
         IdempotencyStore --> Routes[Axum 路由分发器]
     end
     
-    subgraph Event Bus (MPSC Channels)
+    subgraph "Event Bus (MPSC Channels)"
         Routes -->|tokio::sync::mpsc::Sender| Core[Agent 核心执行引擎]
     end
 ```

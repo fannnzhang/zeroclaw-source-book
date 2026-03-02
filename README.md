@@ -23,17 +23,23 @@
 4. **[🔌 大模型接入层与配置池 (Providers & Config)](04_llm_providers.md)**
    > 探究 `src/providers/`。深度剖析基于 Trait 的 LLM 抽象，特别是独特的 **OpenAI OAuth 原生支持与多号池高可用 (Failover) 轮转机制**。
 
-5. **[🛠️ 动作执行与工具箱沙箱 (Tools & Skills WASM)](05_tools_and_skills.md)**
-   > 探究 `src/tools/` 和 `src/skillforge/`。梳理内置工具的注册机制，以及如何在受限的 WASM 环境下安全地动态加载第三方 Skill。
+5. **[⚙️ 核心执行引擎层 (Core Agent Engine)](05_core_agent_engine.md)**
+   > 探究 Agent 核心状态机的运转机制，深入 `src/agent/` 的决策循环与上下文组装过程。
 
-6. **[💬 交互通道与网关 (Channels & Gateway)](06_channels_gateway.md)**
-   > 探究 `src/channels/` 和 `src/gateway/`。ZeroClaw 作为服务器运行时，如何通过灵活的 Channel 机制无缝接入如 Discord、Telegram、Matrix 甚至提供原生的 HTTP API。
-
-7. **[💾 记忆持久化与基础设施 (Memory & RAG)](07_memory_infrastructure.md)**
+6. **[💾 全量记忆体与检索引擎 (Memory & RAG)](06_memory_and_rag.md)**
    > 探究 `src/memory/` 和 `src/rag/`。解密极致精简架构下的短期与长期记忆管理（SQLite / Postgres 支持），以及对文本向量化的原生支持。
 
-8. **[🛡️ 安全机制与内网穿透 (Security & Tunnels)](08_security_tunnels.md)**
-   > 探究 `src/security/` 和 `src/tunnel/`。重点分析基于 Tailscale 的内网穿透能力，以及从底层保障 Agent 运行和网络暴露安全的鉴权链路。
+7. **[💬 多端通道互联与网关通信 (Channels & Gateway)](07_channels_and_gateway.md)**
+   > 探究 `src/channels/` 和 `src/gateway/`。从统一的 `Channel` Trait 到工业级的 Axum 网关，解析限流、幂等、流式响应等生产级能力。
+
+8. **[🛠️ 工具链与智能外设 (Tools & Hardware IoT)](08_tools_and_hardware.md)**
+   > 探究 `src/tools/`。梳理内置工具的注册机制以及硬件/IoT 设备的接入扩展。
+
+9. **[⏰ 时空调度、系统驻留与高可用保障 (Scheduling & Reliability)](09_scheduling_and_reliability.md)**
+   > 探究 `src/daemon/` 和调度子系统。解析定时任务、守护进程驻留与高可用容错机制。
+
+10. **[🛡️ 绝对安全防御与生存经济学 (Security, Approval & Economic)](10_security_approval_and_economic.md)**
+    > 探究安全鉴权链路、高危操作人工审批机制，以及 Token 配额经济与成本过载防护。
 
 ---
 
