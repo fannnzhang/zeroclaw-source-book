@@ -154,53 +154,70 @@ graph TD
 
 ---
 
-### 4.3.4 延伸对照：官方 OpenAI Codex CLI 的凭据存储与迁移参考 🔑
+### 4.3.4 延伸对照：官方 OpenAI Codex CLI 的凭据存储解法 (Keyring) 🔑
 
-为了更深入理解 OAuth Token 的存储设计，参考同期 OpenAI 官方开源项目 **Codex CLI** (`codex-rs`) 的处理方式，可以发现两者在安全性设计上的差异，以及两端 Token 格式的兼容性。
+为了更深入理解系统级编程中的凭据存储艺术，我们特意查阅了同期的 OpenAI 官方开源项目 —— **Codex CLI** (`codex-rs`) 是如何处理这段逻辑的（见 Codex 源码 `rmcp-client/src/oauth.rs`）。
 
-#### Codex CLI 的凭据存储方式
+Codex 采取了另一种业界标准的做法：**基于操作系统的 Keyring（凭据管理器）**。
 
-Codex 源码 (`codex-rs/core/src/auth/storage.rs`) 采用了 **OS Keychain 优先 + 明文 JSON 兜底** 的策略：
+1.  **存储策略三连 (`OAuthCredentialsStoreMode`)**：
+    Codex 定义了三种模式：`Auto` (默认), `File`, `Keyring`。
+2.  **默认走硬件 / OS 级密保 (`KeyringStore`)**：
+    在 `Auto` 模式下，Codex 会默认尝试调用底层操作系统的 Keychain 机制（通过 Rust 的 `keyring` crate）：
+    *   **macOS**: macOS Keychain (钥匙串)
+    *   **Windows**: Windows Credential Manager (凭据管理器)
+    *   **Linux**: DBus-based Secret Service 或 Linux kernel keyutils
+3.  **降级策略 (Fallback to File)**：
+    只有当操作系统的 Keyring 服务不可用、或者因为环境问题（如 Docker 容器、无头服务器）报错时，Codex 才会降级将 Token 写到文件 `~/.codex/.credentials.json` 中。
+    值得注意的是，Codex 的文件降级存储方案是**明文 (Plain text)**的，因此它通过代码在 Unix 系统下强制把文件权限设定为 `0o600`（仅当前用户可读写）来做基础防范：
+    ```rust
+    // Codex 源码片段
+    let perms = fs::Permissions::from_mode(0o600);
+    fs::set_permissions(&path, perms)?;
+    ```
 
-- **有 Keychain 环境（Mac/Linux desktop）**：Token 存入系统 Keychain（`security` / `libsecret`）
-- **无 Keychain 环境（服务器/容器）**：降级为 `~/.codex/auth.json` 明文存储
+**对比总结：**
+*   **Codex CLI**: 优先依赖操作系统的 Keychain，极其标准化。但在无状态服务器容器内部署时，通常会降级到**明文存储的 json 文件**，有文件被拖库窃取的风险。
+*   **ZeroClaw**: 取消了对臃肿的 OS Keychain API 的依赖，采用**自带的 `SecretStore`（`enc2:` 前缀，跨平台加密）**。无论是在 Mac 桌面还是 Docker Linux 容器里，落盘的永远是加密密文，全平台安全性更一致。
 
-```json
-// ~/.codex/auth.json 结构示例
-{
-  "auth_mode": "oauth",
-  "tokens": {
-    "access_token": "eyJh...",
-    "refresh_token": "eyJh...",
-    "account_id": "user_xxx",
-    "id_token": {
-      "email": "user@example.com",
-      "raw_jwt": "eyJh..."
-    }
-  }
+---
+
+### 4.3.5 延伸实战：将官方 Codex `auth.json` 迁移至 ZeroClaw 🚀
+
+Codex 在文件降级模式下会将凭据以明文落盘。我们看一下 Codex 源码中定义的文件结构（`codex-rs/core/src/auth/storage.rs` & `token_data.rs`）：
+
+```rust
+pub struct AuthDotJson {
+    pub auth_mode: Option<String>,
+    pub openai_api_key: Option<String>,
+    pub tokens: Option<TokenData>,
+}
+
+pub struct TokenData {
+    pub id_token: IdTokenInfo,      // 包含了 email 和 raw_jwt
+    pub access_token: String,
+    pub refresh_token: String,
+    pub account_id: Option<String>,
 }
 ```
 
-#### 对比：ZeroClaw 官方 vs Codex CLI 的存储策略
+#### 字段映射（两端 RFC 6749 完全兼容）
 
-| 维度 | ZeroClaw (`auth-profiles.json`) | Codex CLI |
-|---|---|---|
-| **存储格式** | JSON (`auth-profiles.json`) | OS Keychain / `auth.json` |
-| **加密方式** | `SecretStore`（`enc2:` 前缀，跨平台统一） | OS Keychain（有时明文） |
-| **跨平台一致性** | ✅ Mac/Linux/容器行为一致 | ❌ 有无 Keychain 行为不同 |
-| **服务器部署** | ✅ 始终加密 | ⚠️ 可能明文落盘 |
-| **标准兼容性** | RFC 6749 `TokenSet` | RFC 6749 `TokenData` |
-
-ZeroClaw 去除了对臃肿 OS Keychain API 的依赖，用 `SecretStore`（`enc2:` 前缀加密格式）实现了跨平台的一致性安全存储。无论是 Mac 桌面还是 Docker Linux 容器，落盘的永远是加密密文。
-
-#### Token 字段映射（两端 RFC 6749 兼容）
-
-| Codex `TokenData` 字段 | ZeroClaw `TokenSet` 字段 |
+| Codex `TokenData` | ZeroClaw `TokenSet` / `AuthProfile` |
 |---|---|
-| `access_token` | `access_token` |
-| `refresh_token` | `refresh_token` |
-| `id_token.raw_jwt` | `id_token` |
+| `access_token` | `token_set.access_token` |
+| `refresh_token` | `token_set.refresh_token` |
+| `id_token.raw_jwt` | `token_set.id_token` |
 | `account_id` | `profile.account_id` |
 | `id_token.email` | `profile.profile_name` |
 
-两端 Token 均来自 **OpenAI Auth 服务器**，是标准 RFC 6749 OAuth Token，字段语义完全一致。这意味着理论上可以实现 `zeroclaw auth import --from-codex` 命令，将 Codex 的明文 `auth.json` 读入并以 ZeroClaw 安全格式重新加密存储，无需重新进行浏览器授权。
+#### 面向官方上游的迁移实现思路
+
+1. 探测并读取 `~/.codex/auth.json` 或 `~/.codex/.credentials.json`
+2. 提取 `tokens.access_token`、`refresh_token`、`id_token`、`account_id`
+3. 构造 `AuthProfile::new_oauth("openai-codex", email, TokenSet { ... })`
+4. 调用 `AuthProfilesStore::upsert_profile(profile, true)` — 内部自动以 `enc2:` 格式加密落盘
+
+两端 Token 均来自 **OpenAI Auth 服务器**，是标准 RFC 6749 字段，语义完全一致。有了 `refresh_token`，系统在后续请求时可自动刷新，无需关心初始 `expires_at` 精度。
+
+最终效果：用一行命令 `zeroclaw auth import --from-codex`（需实现），跳过浏览器重新授权，直接复用 Codex 明文凭据驱动 ZeroClaw Agent。
