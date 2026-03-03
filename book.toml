@@ -1,6 +1,5 @@
 [book]
-authors = ["Fannn Zhang"]
+authors = ["Peter Rich"]
 language = "zh-CN"
-multilingual = false
 src = "src"
 title = "ZeroClaw 源码解析"
