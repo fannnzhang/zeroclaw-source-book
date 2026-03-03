@@ -151,3 +151,56 @@ graph TD
     Exchange --> Store["保存至 profiles\n统一 Token 管理"]
 ```
 
+
+---
+
+### 4.3.4 延伸对照：官方 OpenAI Codex CLI 的凭据存储与迁移参考 🔑
+
+为了更深入理解 OAuth Token 的存储设计，参考同期 OpenAI 官方开源项目 **Codex CLI** (`codex-rs`) 的处理方式，可以发现两者在安全性设计上的差异，以及两端 Token 格式的兼容性。
+
+#### Codex CLI 的凭据存储方式
+
+Codex 源码 (`codex-rs/core/src/auth/storage.rs`) 采用了 **OS Keychain 优先 + 明文 JSON 兜底** 的策略：
+
+- **有 Keychain 环境（Mac/Linux desktop）**：Token 存入系统 Keychain（`security` / `libsecret`）
+- **无 Keychain 环境（服务器/容器）**：降级为 `~/.codex/auth.json` 明文存储
+
+```json
+// ~/.codex/auth.json 结构示例
+{
+  "auth_mode": "oauth",
+  "tokens": {
+    "access_token": "eyJh...",
+    "refresh_token": "eyJh...",
+    "account_id": "user_xxx",
+    "id_token": {
+      "email": "user@example.com",
+      "raw_jwt": "eyJh..."
+    }
+  }
+}
+```
+
+#### 对比：ZeroClaw 官方 vs Codex CLI 的存储策略
+
+| 维度 | ZeroClaw (`auth-profiles.json`) | Codex CLI |
+|---|---|---|
+| **存储格式** | JSON (`auth-profiles.json`) | OS Keychain / `auth.json` |
+| **加密方式** | `SecretStore`（`enc2:` 前缀，跨平台统一） | OS Keychain（有时明文） |
+| **跨平台一致性** | ✅ Mac/Linux/容器行为一致 | ❌ 有无 Keychain 行为不同 |
+| **服务器部署** | ✅ 始终加密 | ⚠️ 可能明文落盘 |
+| **标准兼容性** | RFC 6749 `TokenSet` | RFC 6749 `TokenData` |
+
+ZeroClaw 去除了对臃肿 OS Keychain API 的依赖，用 `SecretStore`（`enc2:` 前缀加密格式）实现了跨平台的一致性安全存储。无论是 Mac 桌面还是 Docker Linux 容器，落盘的永远是加密密文。
+
+#### Token 字段映射（两端 RFC 6749 兼容）
+
+| Codex `TokenData` 字段 | ZeroClaw `TokenSet` 字段 |
+|---|---|
+| `access_token` | `access_token` |
+| `refresh_token` | `refresh_token` |
+| `id_token.raw_jwt` | `id_token` |
+| `account_id` | `profile.account_id` |
+| `id_token.email` | `profile.profile_name` |
+
+两端 Token 均来自 **OpenAI Auth 服务器**，是标准 RFC 6749 OAuth Token，字段语义完全一致。这意味着理论上可以实现 `zeroclaw auth import --from-codex` 命令，将 Codex 的明文 `auth.json` 读入并以 ZeroClaw 安全格式重新加密存储，无需重新进行浏览器授权。
