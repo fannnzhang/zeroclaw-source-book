@@ -24,35 +24,35 @@ ZeroClaw 在寻找配置时，采用的是类似跨平台应用标准的**级联
 
 ```mermaid
 graph TD
-    Config((全局 Config 根节点))
+    Config(("全局 Config 根节点"))
 
-    subgraph 1. 模型与基础调度
+    subgraph sub1["1. 模型与基础调度"]
         Config --> default_provider
-        Config --> model_providers[自定义模型套壳 API]
-        Config --> model_routes[高阶模型路由]
-        Config --> Gateway[Gateway 网关与穿透]
+        Config --> model_providers["自定义模型套壳 API"]
+        Config --> model_routes["高阶模型路由"]
+        Config --> GatewayNode["Gateway 网关与穿透"]
     end
 
-    subgraph 2. 通信与渠道连接
+    subgraph sub2["2. 通信与渠道连接"]
         Config --> channels_config
-        channels_config --> CLI[终端对话]
+        channels_config --> CLI["终端对话"]
         channels_config --> Telegram
         channels_config --> Discord
-        channels_config --> WeChat[微信/钉钉等]
+        channels_config --> WeChat["微信/钉钉等"]
     end
 
-    subgraph 3. 记忆与思考心智
-        Config --> autonomy[截断/自治容许度]
-        Config --> memory[SQLite / Vector 记忆库]
-        Config --> agent[死循环防范/上下文大小]
-        Config --> research_skills[自带工具集与搜商]
+    subgraph sub3["3. 记忆与思考心智"]
+        Config --> autonomy["截断/自治容许度"]
+        Config --> memory["SQLite / Vector 记忆库"]
+        Config --> agent_node["死循环防范/上下文大小"]
+        Config --> research_skills["自带工具集与搜商"]
     end
 
-    subgraph 4. 安全、工具与外围
-        Config --> security[OTP 两步验证与白名单]
-        Config --> tools[浏览器自动化 / HTTP 嗅探]
-        Config --> hardware[实体设备与串行接口]
-        Config --> cost[预算防破产控制]
+    subgraph sub4["4. 安全、工具与外围"]
+        Config --> security["OTP 两步验证与白名单"]
+        Config --> tools["浏览器自动化 / HTTP 嗅探"]
+        Config --> hardware["实体设备与串行接口"]
+        Config --> cost["预算防破产控制"]
     end
 ```
 
@@ -95,15 +95,15 @@ graph TD
 sequenceDiagram
     participant User
     participant ConfigFile as config.toml
-    participant AgentCore as Agent 引擎 (RwLock)
+    participant AgentCore as Agent 引擎 - RwLock
     participant Daemon as Daemon 大管家
 
     User->>ConfigFile: 执行 onboard 或 config set 修改配置
-    Note over ConfigFile,AgentCore: 1. 运行时热重载边界 (无需重启)
+    Note over ConfigFile,AgentCore: 1. 运行时热重载边界 - 无需重启
     AgentCore-->>ConfigFile: 下一次对话前自动读取 RwLock
     AgentCore-->>User: 瞬间以新模型、新人格回复
-    
-    Note over ConfigFile,Daemon: 2. 初始化网络重组边界 (必须重启)
+
+    Note over ConfigFile,Daemon: 2. 初始化网络重组边界 - 必须重启
     User->>Daemon: 执行 zeroclaw service restart
     Daemon->>ConfigFile: 重新解析通道列表与网关端口
     Daemon->>Daemon: 销毁并重建所有 Tokio TCP/IM 长连接

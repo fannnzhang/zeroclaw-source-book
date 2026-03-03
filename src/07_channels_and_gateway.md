@@ -46,21 +46,21 @@ pub trait Channel: Send + Sync {
 
 ```mermaid
 graph TD
-    Client[Telegram / Webhook / Web App] -->|HTTP POST / WSS| Gateway((ZeroClaw Gateway))
+    Client["Telegram / Webhook / Web App"] -->|"HTTP POST / WSS"| GatewayNode(("ZeroClaw Gateway"))
     
-    subgraph "Gateway Core (src/gateway/)"
-        RateLimiter{"限流防火墙<br/>(SlidingWindowRateLimiter)"}
-        IdempotencyStore{"幂等去重器<br/>(IdempotencyStore)"}
-        PayloadValidation[恶意载荷拦截<br/>Content-Length 阻断]
+    subgraph gateway_core["Gateway Core - src/gateway/"]
+        RateLimiter{"限流防火墙 - SlidingWindowRateLimiter"}
+        IdempotencyStore_node{"幂等去重器 - IdempotencyStore"}
+        PayloadValidation["恶意载荷拦截 - Content-Length 阻断"]
         
-        Gateway --> PayloadValidation
+        GatewayNode --> PayloadValidation
         PayloadValidation --> RateLimiter
-        RateLimiter --> IdempotencyStore
-        IdempotencyStore --> Routes[Axum 路由分发器]
+        RateLimiter --> IdempotencyStore_node
+        IdempotencyStore_node --> Routes["Axum 路由分发器"]
     end
     
-    subgraph "Event Bus (MPSC Channels)"
-        Routes -->|tokio::sync::mpsc::Sender| Core[Agent 核心执行引擎]
+    subgraph event_bus["Event Bus - MPSC Channels"]
+        Routes -->|"tokio::sync::mpsc::Sender"| Core["Agent 核心执行引擎"]
     end
 ```
 

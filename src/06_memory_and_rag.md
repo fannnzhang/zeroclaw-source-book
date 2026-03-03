@@ -45,18 +45,18 @@ pub trait Memory: Send + Sync {
 
 ```mermaid
 graph TD
-    UserQuery["用户查询 / LLM Need Memory"] --> MemoryFacade(Memory Trait 统一接口)
+    UserQuery["用户查询 / LLM Need Memory"] --> MemoryFacade("Memory Trait 统一接口")
     
-    subgraph Sqlite Backend
-        MemoryFacade --> FTS5["FTS5 全文索引<br/>(BM25)"]
-        MemoryFacade --> Embedding["计算 Query 向量<br/>(Cache Hit?)"]
-        Embedding --> VectorSearch["向量库<br/>(余弦相似度)"]
+    subgraph sqlite_backend["Sqlite Backend"]
+        MemoryFacade --> FTS5["FTS5 全文索引 - BM25"]
+        MemoryFacade --> Embedding["计算 Query 向量 - Cache Hit?"]
+        Embedding --> VectorSearch["向量库 - 余弦相似度"]
         
-        FTS5 --"Weight (e.g. 0.3)"--> HybridMerge
-        VectorSearch --"Weight (e.g. 0.7)"--> HybridMerge
+        FTS5 --"Weight 0.3"--> HybridMerge
+        VectorSearch --"Weight 0.7"--> HybridMerge
     end
     
-    HybridMerge{"按权重并集重排<br/>(Hybrid Fusion)"} --> TopK["返回最高分 MemoryEntry"]
+    HybridMerge{"按权重并集重排 - Hybrid Fusion"} --> TopK["返回最高分 MemoryEntry"]
 ```
 
 ---

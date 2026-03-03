@@ -94,7 +94,7 @@ stateDiagram-v2
     
     state ContextBuilding {
         构建记忆提示词
-        组装系统指令(System Prompt)
+        组装系统指令 System Prompt
     }
     
     ContextBuilding --> LLM_Inference
@@ -103,26 +103,26 @@ stateDiagram-v2
         Provider发起推流
     }
     
-    LLM_Inference --> Action_Parsing : 获得回复(Message)
+    LLM_Inference --> Action_Parsing : 获得回复 Message
     
     state Action_Parsing <<choice>>
-    Action_Parsing --> Final_Response : 无工具调用 (纯聊天)
-    Action_Parsing --> Sandboxed_Execution : 解析出工具有效负载(ToolCall)
+    Action_Parsing --> Final_Response : 无工具调用 - 纯聊天
+    Action_Parsing --> Sandboxed_Execution : 解析出工具有效负载 ToolCall
     
     state Sandboxed_Execution {
-        权限审批(Approval Blocking)
-        并发/串行环境执行
+        权限审批 Approval Blocking
+        并发或串行环境执行
         收集结果
     }
     
     Sandboxed_Execution --> Detection : 检查环境收敛
     
     state Detection {
-        防死循环探测 (LoopDetector)
+        防死循环探测 LoopDetector
         检查安全网关策略
     }
     
-    Detection --> LLM_Inference : 将工具结果(ToolMessage)抛回给大模型
+    Detection --> LLM_Inference : 将工具结果 ToolMessage 抛回给大模型
     Detection --> Final_Response : 死循环强制熔断
     
     Final_Response --> [*] : 返回结果给用户流
