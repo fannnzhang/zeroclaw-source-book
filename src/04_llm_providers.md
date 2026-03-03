@@ -94,10 +94,22 @@ base_url = "http://127.0.0.1:11434/v1"
 
 ---
 
-## 4.3 专项深挖：OpenAI OAuth 原生支持与高可用多号池 (Failover Pool) 
+## 4.3 深挖扩展：OpenAI OAuth 多号池与高可用 Failover（⚠️ Fork 自研扩展）
 
-在 `src/providers/` 目录下，有一个极具亮点的实现：**`openai_oauth.rs`**。
-ZeroClaw 独特地在框架原生层面解决了：在没有购买纯 API Key 时，如何利用官方 ChatGPT Plus/Pro/Free 账号的 OAuth 鉴权，实现稳定、高可用的 API 调用（甚至自带了多号防风控切换功能）。
+> [!IMPORTANT]
+> **本节内容来自本项目的 Fork 自研扩展，并非 ZeroClaw 官方上游功能。**
+>
+> 官方上游 (`src/auth/openai_oauth.rs`) 仅实现了标准的 **PKCE + Browser/Device Code 单账户授权流程**，用于获取并存储 Token 供 CLI 本地使用，没有多账号号池、没有 Chacha20 自定义加密存储和 Failover 自动切换功能。
+>
+> 本节描述的以下能力均为 Fork 中新增/修改的实现：
+> - `src/providers/openai_oauth.rs`（完整的 OAuth Provider 接入）
+> - `src/oauth/store.rs`（多号 Chacha20 加密存储池）
+> - `advance_cursor()` Failover 切换逻辑
+>
+> **官方上游支持计划**：从现有 GitHub Issue/PR 来看，官方目前尚无公开的多账号号池路线图。Gemini OAuth 已于近期被合并到 `src/auth/` 中（含 `gemini_oauth.rs` 与统一 OAuth 工具类 `oauth_common.rs`），说明官方在持续完善 OAuth 基础框架，但 "Provider 层的多账号 Failover" 属于更高阶的应用层能力，短期内是否会官方化尚无公开讨论。
+
+在 Fork 版的 `src/providers/` 目录下，扩展实现了一个生产级、企业级的高可用接入层：**`openai_oauth.rs`**。
+这一扩展解决了：在没有购买纯 API Key 时，如何利用官方 ChatGPT Plus/Pro/Free 账号的 OAuth 鉴权，实现稳定、高可用的 API 调用，并自带多号防风控切换功能。
 
 ### 4.3.1 OAuth 授权与多号录入 (`src/oauth_cli.rs` & `src/oauth/openai_login.rs`)
 
