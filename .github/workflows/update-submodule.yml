@@ -1,0 +1,62 @@
+name: Auto Update zeroclaw Submodule
+
+on:
+  schedule:
+    # Run daily at midnight UTC to check for new upstream releases
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-submodule:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get current submodule commit
+        id: before
+        run: echo "sha=$(git -C zeroclaw rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Update zeroclaw submodule to latest
+        run: git submodule update --remote --merge zeroclaw
+
+      - name: Get new submodule commit
+        id: after
+        run: echo "sha=$(git -C zeroclaw rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Get upstream latest tag/release info
+        id: release
+        run: |
+          TAG=$(git -C zeroclaw describe --tags --abbrev=0 2>/dev/null || echo "unknown")
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request if submodule changed
+        if: steps.before.outputs.sha != steps.after.outputs.sha
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update zeroclaw submodule to ${{ steps.release.outputs.tag }} (${{ steps.after.outputs.sha }})"
+          title: "⬆️ Update zeroclaw submodule to ${{ steps.release.outputs.tag }}"
+          body: |
+            ## Submodule Update
+
+            The `zeroclaw` upstream submodule has been updated automatically.
+
+            | | Commit |
+            |---|---|
+            | **Before** | `${{ steps.before.outputs.sha }}` |
+            | **After** | `${{ steps.after.outputs.sha }}` |
+            | **Latest Tag** | `${{ steps.release.outputs.tag }}` |
+
+            **Upstream diff**: https://github.com/zeroclaw-labs/zeroclaw/compare/${{ steps.before.outputs.sha }}...${{ steps.after.outputs.sha }}
+
+            > Review the diff to check if any documentation updates are needed to reflect source code changes.
+          branch: auto-update/zeroclaw-submodule
+          delete-branch: true
+          labels: dependencies, automated
