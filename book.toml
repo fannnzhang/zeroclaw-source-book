@@ -3,3 +3,9 @@ authors = ["Peter Rich"]
 language = "zh-CN"
 src = "src"
 title = "ZeroClaw 源码解析"
+
+[preprocessor.mermaid]
+command = "mdbook-mermaid"
+
+[output.html]
+additional-js = ["mermaid.min.js", "mermaid-init.js"]
