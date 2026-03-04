@@ -41,6 +41,12 @@
 10. **[🛡️ 绝对安全防御与生存经济学 (Security, Approval & Economic)](10_security_approval_and_economic.md)**
     > 探究安全鉴权链路、高危操作人工审批机制，以及 Token 配额经济与成本过载防护。
 
+11. **[🧩 插件体系架构 (Plugin Architecture)](11_plugin_architecture.md)**
+    > 探究 `src/plugins/` 目录。解密基于 WebAssembly 的插件沙盒加载、动态注册与扩展机制。
+
+12. **[📱 Android 桥接集成 (Android Bridge)](12_android_bridge.md)**
+    > 探究 `clients/android-bridge/`。解析通过 Mozilla UniFFI 实现的 Rust 原生智能体与 Kotlin/Android 的跨端无缝集成。
+
 ---
 
 *“Zero overhead. Zero compromise. Deploy anywhere. Swap anything.”*

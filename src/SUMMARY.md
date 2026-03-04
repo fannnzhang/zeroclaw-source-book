@@ -12,3 +12,5 @@
 - [第八章：工具与硬件](./08_tools_and_hardware.md)
 - [第九章：调度与可靠性](./09_scheduling_and_reliability.md)
 - [第十章：安全审批与经济模型](./10_security_approval_and_economic.md)
+- [第十一章：插件体系架构](./11_plugin_architecture.md)
+- [第十二章：Android 桥接集成](./12_android_bridge.md)
