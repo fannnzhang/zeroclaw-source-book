@@ -38,7 +38,7 @@ graph TD
         channels_config --> CLI["终端对话"]
         channels_config --> Telegram
         channels_config --> Discord
-        channels_config --> WeChat["微信/钉钉等"]
+        channels_config --> DingTalk["钉钉/飞书等"]
     end
 
     subgraph sub3["3. 记忆与思考心智"]
@@ -65,7 +65,7 @@ graph TD
 
 ### 板块二：通信与渠道连接 (Channels)
 这部分决定了机器人能在哪些地方上班聊天。
-* `channels_config`：这是所有 IM 体系的聚合。包含了 `telegram`, `discord`, `slack`, `mattermost`, `wechat` (微信), `qq`, `dingtalk` (钉钉) 等几乎所有主流平台的接入凭据配置。
+* `channels_config`：这是所有 IM 体系的聚合。包含了 `telegram`, `discord`, `slack`, `mattermost`, `whatsapp`, `qq`, `dingtalk` (钉钉) 等几乎所有主流平台的接入凭据配置。
 
 ### 板块三：Agent 的记忆与思考心智 (Autonomy & Memory)
 这部分是区别普通脚本与“智能体”的关键。

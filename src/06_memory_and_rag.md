@@ -587,10 +587,10 @@ I am ZeroClaw, a self-preserving AI agent specialized in IoT automation.
 
 ## 6.11 跨端 Channel 的记忆流转设计 (`src/agent/session.rs`)
 
-作为一款支持极多通讯信道（微信、Discord、Telegram、甚至串口）的引擎，处理好对同一个记忆本体的"人机关系"至关重要。ZeroClaw 使用 `AgentSessionStrategy` 实现了细粒度的会话隔离配置：
+作为一款支持极多通讯信道（钉钉、Discord、Telegram、甚至串口）的引擎，处理好对同一个记忆本体的"人机关系"至关重要。ZeroClaw 使用 `AgentSessionStrategy` 实现了细粒度的会话隔离配置：
 
 1. **`Main` (全局共域)**: 所有信道的对话共享同一个 `session_id = "main"`。此时 Agent 是一个纯粹的"全知全局体"，在 Discord 上聊到一半的设计，去 Telegram 上可以直接接着聊。
-2. **`PerChannel` (信道隔离)**: 基于 `channel_name` 建立隔离的会话流。微信机器人是微信的记忆，钉钉是钉钉的记忆，互不串联。
+2. **`PerChannel` (信道隔离)**: 基于 `channel_name` 建立隔离的会话流。飞书机器人是飞书的记忆，钉钉是钉钉的记忆，互不串联。
 3. **`PerSender` (发件人隔离/千人千面)**: 会议级的高频使用场景，基于 `channel_name:sender_id` 构建 session。这使得在同一个群组 (Channel) 内，Agent 能清晰区分不同的操作者，维持专属的上下文，不会将 A 的提问跟 B 的报错混淆。若要实现跨端同源 (即同一个真实用户绑定了多个平台)，这套架构也预留了向"唯一身份映射"演进的接口。
 
 ---

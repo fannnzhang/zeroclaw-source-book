@@ -31,7 +31,7 @@
 结合 Chapter 7 中的 Channel 交互机制，`src/approval/mod.rs` 设计了优雅的 `ApprovalManager`。
 
 1. **中断反馈流**:
-   当 Agent 在 Supervised 模式下企图运行高危命令时，执行线程会被 `tokio::sync` 挂起。系统将生成 `ApprovalRequest` 并通过微信/Telegram 长连接发送消息。
+   当 Agent 在 Supervised 模式下企图运行高危命令时，执行线程会被 `tokio::sync` 挂起。系统将生成 `ApprovalRequest` 并通过 Discord/Telegram 长连接发送消息。
 2. **Session 级豁免 (Always Ask / Auto Approve)**:
    为了不让人类被频繁打扰，在审批面板中除了 Yes 和 No，系统提供了 **Always (本会话自动放行)**。
    `ApprovalManager` 会使用内存维护一个 Token 会话令牌，在此次任务未中断前，此类行为将不再重复报警。所有这一切行为最终会落入严密的 **审计日志 (Audit Log)**。

@@ -77,7 +77,7 @@ api_key = "sk-inner-net-key"
 
 ## 4. IM 频道接入 (`[channels_config]`)
 
-这是让 ZeroClaw 变成你在各大聊天软件（微信、电报、钉钉等）分身的钥匙。你只需要填入对应平台的 Bot Token 即可。下面以 Telegram 和 Discord 为例。
+这是让 ZeroClaw 变成你在各大聊天软件（Discord、电报、钉钉等）分身的钥匙。你只需要填入对应平台的 Bot Token 即可。下面以 Telegram 和 Discord 为例。
 
 ```toml
 [channels_config]
@@ -136,7 +136,7 @@ fallback_providers = ["exa", "jina", "duckduckgo"]
 enabled = true
 # 指定拦截的方法，"totp" 代表使用谷歌身份验证器 (Google Authenticator) 扫码验证
 method = "totp" 
-# 当 Agent 尝试调用以下极其危险的动作时，你的终端/微信会要求你输入 6 位数验证码
+# 当 Agent 尝试调用以下极其危险的动作时，你的终端/通信软件会要求你输入 6 位数验证码
 gated_actions = ["shell", "file_write", "browser_open"]
 ```
 
